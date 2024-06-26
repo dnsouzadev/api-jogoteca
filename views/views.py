@@ -1,7 +1,8 @@
-from flask import flash, redirect, render_template, request, send_from_directory, url_for, session
+from flask import abort, flash, redirect, render_template, request, send_from_directory, url_for, session
 from models.models import Jogos, Usuarios
 from jogoteca import app, db
 import os
+from helpers import recupera_imagem
 
 @app.route('/')
 def index():
@@ -36,7 +37,7 @@ def criar():
     os.makedirs(f'uploads/{nome}', exist_ok=True)
 
     arquivo = request.files['arquivo']
-    upload_path = os.path.join(app.config['UPLOAD_PATH'], nome, f'{str(novo_jogo.id)}.jpg')
+    upload_path = os.path.join(app.config['UPLOAD_PATH'], nome, f'capa{str(novo_jogo.id)}.jpg')
     arquivo.save(upload_path)
 
     flash(f'O jogo {novo_jogo.nome} foi cadastrado com sucesso!')
@@ -72,7 +73,9 @@ def editar(id):
 
     jogo = Jogos.query.filter_by(id=id).first()
 
-    return render_template('editar.html', titulo='Editando Jogo', jogo=jogo)
+    capa_jogo = recupera_imagem(jogo.id)
+
+    return render_template('editar.html', titulo='Editando Jogo', jogo=jogo, capa_jogo=capa_jogo)
 
 @app.route('/atualizar', methods=['POST',])
 def atualizar():
@@ -82,6 +85,11 @@ def atualizar():
     jogo.categoria = request.form['categoria']
     jogo.console = request.form['console']
     db.session.commit()
+
+    arquivo = request.files['arquivo']
+    upload_path = os.path.join(app.config['UPLOAD_PATH'], jogo.nome, f'capa{str(jogo.id)}.jpg')
+    arquivo.save(upload_path)
+
     flash(f'O jogo {jogo.nome} foi atualizado com sucesso!')
     return redirect(url_for('index'))
 
@@ -99,4 +107,15 @@ def deletar(id):
 
 @app.route('/uploads/<nome_arquivo>')
 def imagem(nome_arquivo):
-    return send_from_directory('uploads', nome_arquivo)
+    u = nome_arquivo.split(':')
+    diretorio = os.path.join(app.config['UPLOAD_PATH'], os.path.dirname(u[0]))
+    diretorio = diretorio + '/' + u[0]
+    arquivo = os.path.basename(u[1])
+
+    print(f'diretorio -> {diretorio}')
+    print(f'arquivo -> {arquivo}')
+
+    if not os.path.exists(os.path.join(diretorio, arquivo)):
+        return abort(404)
+
+    return send_from_directory(diretorio, arquivo)

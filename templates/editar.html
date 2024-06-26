@@ -2,6 +2,20 @@
 
 {% block content %}
         <form action="/atualizar" method="post">
+
+            <div class="form-group mb-3">
+                <figure class="text-center">
+                    <img class="img-responseive" src="{{ url_for('imagem', nome_arquivo=capa_jogo) }}" width="200px" height="200px" alt="Capa do jogo" class="img-thumbnail" id="foto">
+                    <figcaption>
+                        <label for="foto" class="form-label">
+                            Mudar Capa
+                            <input type="file" name="arquivo" accept=".jpg" class="form-control">
+                        </label>
+                    </figcaption>
+                </figure>
+            </div>
+
+
             <fieldset class="border p-4 rounded">
                 <input type="hidden" name="id" name="id" value="{{ jogo.id }}">
                 <div class="form-group mb-3">
