@@ -1,31 +1,27 @@
 from flask import Flask, flash, redirect, render_template, request, url_for, session
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-
 app.secret_key = 'alura'
 
-class Jogo:
-    def __init__(self, nome, categoria, console):
-        self.nome = nome
-        self.categoria = categoria
-        self.console = console
+app.config['SQLALCHEMY_DATABASE_URI'] = \
+    'mysql+mysqlconnector://root:admin@localhost/jogoteca'
 
-jogo1 = Jogo('Super Mario', 'Ação', 'SNES')
-jogo2 = Jogo('Pokemon Gold', 'RPG', 'GBA')
-jogo3 = Jogo('Mortal Kombat', 'Luta', 'SNES')
-jogo4 = Jogo('GTA V', 'Ação', 'PS4')
-jogos = [jogo1, jogo2, jogo3, jogo4]
+db = SQLAlchemy(app)
 
+class Jogo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(50), nullable=False)
+    categoria = db.Column(db.String(40), nullable=False)
+    console = db.Column(db.String(20), nullable=False)
 
-class Usuario:
-    def __init__(self, nickname, nome, senha):
-        self.nickname = nickname
-        self.nome = nome
-        self.senha = senha
+    def __repr__(self):
+        return f'<Name {self.nome}>'
 
-usuario1 = Usuario('admin', 'admin', '1234')
-
-usuarios = { usuario1.nickname: usuario1 }
+class Usuario(db.Model):
+    nome = db.Column(db.String(20), nullable=False)
+    nickname = db.Column(db.String(8), primary_key=True)
+    senha = db.Column(db.String(100), nullable=False)
 
 
 @app.route('/')
