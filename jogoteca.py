@@ -9,7 +9,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = \
 
 db = SQLAlchemy(app)
 
-class Jogo(db.Model):
+class Jogos(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(50), nullable=False)
     categoria = db.Column(db.String(40), nullable=False)
@@ -18,22 +18,19 @@ class Jogo(db.Model):
     def __repr__(self):
         return f'<Name {self.nome}>'
 
-class Usuario(db.Model):
+class Usuarios(db.Model):
     nome = db.Column(db.String(20), nullable=False)
-    nickname = db.Column(db.String(8), primary_key=True)
+    nickname = db.Column(db.String(8), primary_key=True, unique=True)
     senha = db.Column(db.String(100), nullable=False)
 
 
 @app.route('/')
 def index():
-    if 'usuario_logado' not in session or session['usuario_logado'] == None:
-        return redirect(url_for('login'))
+    jogos = Jogos.query.order_by(Jogos.categoria).all()
     return render_template('lista.html', titulo='Jogos', jogos=jogos)
 
 @app.route('/novo')
 def novo():
-    if 'usuario_logado' not in session or session['usuario_logado'] == None:
-        return redirect(url_for('login'))
     return render_template('novo.html', titulo='Novo Jogo')
 
 @app.route('/criar', methods=['POST',])
@@ -41,8 +38,16 @@ def criar():
     nome = request.form['nome']
     categoria = request.form['categoria']
     console = request.form['console']
-    jogo = Jogo(nome, categoria, console)
-    jogos.append(jogo)
+
+    jogo = Jogos.query.filter_by(nome=nome).first()
+    if jogo:
+        flash(f'O jogo {jogo.nome} já está cadastrado!')
+        return redirect(url_for('novo'))
+
+    novo_jogo = Jogos(nome=nome, categoria=categoria, console=console)
+    db.session.add(novo_jogo)
+    db.session.commit()
+    flash(f'O jogo {novo_jogo.nome} foi cadastrado com sucesso!')
     return redirect(url_for('index'))
 
 @app.route('/login')
@@ -51,13 +56,16 @@ def login():
 
 @app.route('/autenticar', methods=['POST',])
 def autenticar():
-    if request.form['usuario'] in usuarios:
-        if request.form['senha'] == usuarios[request.form['usuario']].senha:
-            session['usuario_logado'] = request.form['usuario']
-            flash('Login realizado com sucesso!')
-            return redirect(url_for('index'))
-    flash('Usuário ou senha inválidos!')
-    return redirect(url_for('login'))
+    usuario = Usuarios.query.filter_by(nickname=request.form['usuario']).first()
+    if not usuario:
+        flash('Usuário não encontrado!')
+        return redirect(url_for('login'))
+    if usuario.senha != request.form['senha']:
+        flash('Senha incorreta!')
+        return redirect(url_for('login'))
+    session['usuario_logado'] = usuario.nickname
+    flash(f'{usuario.nome} logou com sucesso!')
+    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
