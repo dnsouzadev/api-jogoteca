@@ -12,18 +12,39 @@
         <div class="container">
             <a class="navbar-brand" href="/">Jogoteca</a>
             <ul class="navbar-nav ml-auto">
+                {% if session.usuario_logado %}
                 <li class="nav-item">
                     <a class="nav-link" href="/novo">Adicionar Jogo</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/">Lista de Jogos</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Sair</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/login">Entrar</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </nav>
 
 
     <div class="container mt-5">
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul id='messages' class='list-unstyled'>
+                    {% for message in messages %}
+                        <li class='alert alert-info'>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+
         <div class="page-header">
             <h1>{{ titulo }}</h1>
         </div>
