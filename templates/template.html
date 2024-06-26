@@ -3,10 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/css/bootstrap.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
     <title>Jogoteca</title>
 </head>
 <body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Jogoteca</a>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/novo">Adicionar Jogo</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Lista de Jogos</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+
     <div class="container mt-5">
         <div class="page-header">
             <h1>{{ titulo }}</h1>
