@@ -6,6 +6,7 @@
                     <th>Nome</th>
                     <th>Categoria</th>
                     <th>Console</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -14,6 +15,10 @@
                         <td>{{ jogo.nome }}</td>
                         <td>{{ jogo.categoria}}</td>
                         <td>{{ jogo.console }}</td>
+                        <td class="text-center">
+                            <a href="/editar/{{ jogo.id }}" class="btn btn-primary btn-sm">Editar</a>
+                            <a href="/deletar/{{ jogo.id }}" class="btn btn-danger btn-sm">Deletar</a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
