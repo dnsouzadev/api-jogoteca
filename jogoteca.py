@@ -17,12 +17,27 @@ jogo4 = Jogo('GTA V', 'Ação', 'PS4')
 jogos = [jogo1, jogo2, jogo3, jogo4]
 
 
+class Usuario:
+    def __init__(self, nickname, nome, senha):
+        self.nickname = nickname
+        self.nome = nome
+        self.senha = senha
+
+usuario1 = Usuario('admin', 'admin', '1234')
+
+usuarios = { usuario1.nickname: usuario1 }
+
+
 @app.route('/')
 def index():
+    if 'usuario_logado' not in session or session['usuario_logado'] == None:
+        return redirect(url_for('login'))
     return render_template('lista.html', titulo='Jogos', jogos=jogos)
 
 @app.route('/novo')
 def novo():
+    if 'usuario_logado' not in session or session['usuario_logado'] == None:
+        return redirect(url_for('login'))
     return render_template('novo.html', titulo='Novo Jogo')
 
 @app.route('/criar', methods=['POST',])
@@ -40,10 +55,11 @@ def login():
 
 @app.route('/autenticar', methods=['POST',])
 def autenticar():
-    if 'admin' == request.form['usuario'] and '1234' == request.form['senha']:
-        session['usuario_logado'] = request.form['usuario']
-        flash('Login realizado com sucesso!')
-        return redirect(url_for('index'))
+    if request.form['usuario'] in usuarios:
+        if request.form['senha'] == usuarios[request.form['usuario']].senha:
+            session['usuario_logado'] = request.form['usuario']
+            flash('Login realizado com sucesso!')
+            return redirect(url_for('index'))
     flash('Usuário ou senha inválidos!')
     return redirect(url_for('login'))
 
