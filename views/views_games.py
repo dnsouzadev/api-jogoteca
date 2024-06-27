@@ -1,9 +1,9 @@
-from flask import abort, flash, redirect, render_template, request, send_from_directory, url_for, session
-from models.models import Jogos, Usuarios
+from flask import flash, redirect, render_template, request, send_from_directory, url_for, session
+from models.Jogos import Jogos
 from jogoteca import app, db
 import os
 from helpers import recupera_imagem, deleta_imagem
-from models.forms import FormCriarJogo, FormLogin
+from models.forms import FormCriarJogo
 import time
 
 @app.route('/')
@@ -51,32 +51,6 @@ def criar():
 
     flash(f'O jogo {novo_jogo.nome} foi cadastrado com sucesso!')
     return redirect(url_for('index'))
-
-@app.route('/login')
-def login():
-    form = FormLogin()
-    return render_template('login.html', titulo='Login', form=form)
-
-@app.route('/autenticar', methods=['POST',])
-def autenticar():
-    form = FormLogin(request.form)
-
-    usuario = Usuarios.query.filter_by(nickname=form.nickname.data).first()
-    if not usuario:
-        flash('Usuário não encontrado!')
-        return redirect(url_for('login'))
-    if usuario.senha != form.senha.data:
-        flash('Senha incorreta!')
-        return redirect(url_for('login'))
-    session['usuario_logado'] = usuario.nickname
-    flash(f'{usuario.nome} logou com sucesso!')
-    return redirect(url_for('index'))
-
-@app.route('/logout')
-def logout():
-    session['usuario_logado'] = None
-    flash('Logout realizado com sucesso!')
-    return redirect(url_for('login'))
 
 @app.route('/editar/<int:id>')
 def editar(id):
