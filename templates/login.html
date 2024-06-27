@@ -2,16 +2,17 @@
 {% block content %}
 
     <form action="/autenticar" method="post">
+        {{ form.csrf_token }}
         <fieldset class="border p-4 rounded">
             <div class="form-group mb-3">
-                <label for="usuario" class="form-label">Usuário</label>
-                <input type="text" id="usuario" name="usuario" class="form-control">
+                {{ form.nickname.label(class="form-label") }}
+                {{ form.nickname(class="form-control") }}
             </div>
             <div class="form-group mb-3">
-                <label for="senha" class="form-label">Senha</label>
-                <input type="password" id="senha" name="senha" class="form-control">
+                {{ form.senha.label(class="form-label") }}
+                {{ form.senha(class="form-control") }}
             </div>
-            <button type="submit" class="btn btn-primary btn-salvar">Entrar</button>
+            {{ form.login(class="btn btn-primary") }}
         </fieldset>
     </form>
 

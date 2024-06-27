@@ -2,7 +2,8 @@ from flask import abort, flash, redirect, render_template, request, send_from_di
 from models.models import Jogos, Usuarios
 from jogoteca import app, db
 import os
-from helpers import recupera_imagem, deleta_imagem, FormCriarJogo
+from helpers import recupera_imagem, deleta_imagem
+from models.forms import FormCriarJogo, FormLogin
 import time
 
 @app.route('/')
@@ -53,15 +54,18 @@ def criar():
 
 @app.route('/login')
 def login():
-    return render_template('login.html', titulo='Login')
+    form = FormLogin()
+    return render_template('login.html', titulo='Login', form=form)
 
 @app.route('/autenticar', methods=['POST',])
 def autenticar():
-    usuario = Usuarios.query.filter_by(nickname=request.form['usuario']).first()
+    form = FormLogin(request.form)
+
+    usuario = Usuarios.query.filter_by(nickname=form.nickname.data).first()
     if not usuario:
         flash('Usuário não encontrado!')
         return redirect(url_for('login'))
-    if usuario.senha != request.form['senha']:
+    if usuario.senha != form.senha.data:
         flash('Senha incorreta!')
         return redirect(url_for('login'))
     session['usuario_logado'] = usuario.nickname
