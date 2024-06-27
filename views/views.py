@@ -2,7 +2,7 @@ from flask import abort, flash, redirect, render_template, request, send_from_di
 from models.models import Jogos, Usuarios
 from jogoteca import app, db
 import os
-from helpers import recupera_imagem, deleta_imagem
+from helpers import recupera_imagem, deleta_imagem, FormCriarJogo
 import time
 
 @app.route('/')
@@ -18,13 +18,20 @@ def novo():
     if 'usuario_logado' not in session or session['usuario_logado'] is None:
         return redirect(url_for('login'))
 
-    return render_template('novo.html', titulo='Novo Jogo')
+    form = FormCriarJogo()
+
+    return render_template('novo.html', titulo='Novo Jogo', form=form)
 
 @app.route('/criar', methods=['POST',])
 def criar():
-    nome = request.form['nome']
-    categoria = request.form['categoria']
-    console = request.form['console']
+    form = FormCriarJogo(request.form)
+
+    if not form.validate_on_submit():
+        return redirect(url_for('novo'))
+
+    nome = form.nome.data
+    categoria = form.categoria.data
+    console = form.console.data
 
     jogo = Jogos.query.filter_by(nome=nome).first()
     if jogo:
@@ -36,10 +43,9 @@ def criar():
     db.session.commit()
 
     os.makedirs(f'uploads/{nome}', exist_ok=True)
-
     arquivo = request.files['arquivo']
     timestamp = time.time()
-    upload_path = os.path.join(app.config['UPLOAD_PATH'], jogo.nome, f'capa{str(jogo.id)}--{timestamp}.jpg')
+    upload_path = os.path.join(app.config['UPLOAD_PATH'], novo_jogo.nome, f'capa{str(novo_jogo.id)}--{timestamp}.jpg')
     arquivo.save(upload_path)
 
     flash(f'O jogo {novo_jogo.nome} foi cadastrado com sucesso!')
@@ -75,28 +81,36 @@ def editar(id):
 
     jogo = Jogos.query.filter_by(id=id).first()
 
-    capa_jogo = recupera_imagem(jogo.id)
+    form = FormCriarJogo()
+    form.nome.data = jogo.nome
+    form.categoria.data = jogo.categoria
+    form.console.data = jogo.console
 
-    return render_template('editar.html', titulo='Editando Jogo', jogo=jogo, capa_jogo=capa_jogo)
+    capa_jogo = recupera_imagem(jogo.id)
+    print(capa_jogo)
+
+    return render_template('editar.html', titulo='Editando Jogo', id=id, capa_jogo=capa_jogo, form=form)
 
 @app.route('/atualizar', methods=['POST',])
 def atualizar():
-    id = request.form['id']
-    jogo = Jogos.query.filter_by(id=id).first()
-    jogo.nome = request.form['nome']
-    jogo.categoria = request.form['categoria']
-    jogo.console = request.form['console']
-    db.session.commit()
+    form = FormCriarJogo(request.form)
 
-    os.makedirs(f'uploads/{jogo.nome}', exist_ok=True)
+    if form.validate_on_submit():
+        jogo = Jogos.query.filter_by(id=request.form['id']).first()
+        jogo.nome = form.nome.data
+        jogo.categoria = form.categoria.data
+        jogo.console = form.console.data
+        db.session.commit()
 
-    arquivo = request.files['arquivo']
-    timestamp = time.time()
-    deleta_imagem(jogo.id)
-    upload_path = os.path.join(app.config['UPLOAD_PATH'], jogo.nome, f'capa{str(jogo.id)}--{timestamp}.jpg')
-    arquivo.save(upload_path)
+        os.makedirs(f'uploads/{jogo.nome}', exist_ok=True)
 
-    flash(f'O jogo {jogo.nome} foi atualizado com sucesso!')
+        arquivo = request.files['arquivo']
+        timestamp = time.time()
+        deleta_imagem(jogo.id)
+        upload_path = os.path.join(app.config['UPLOAD_PATH'], jogo.nome, f'capa{str(jogo.id)}--{timestamp}.jpg')
+        arquivo.save(upload_path)
+
+        flash(f'O jogo {jogo.nome} foi atualizado com sucesso!')
     return redirect(url_for('index'))
 
 @app.route('/deletar/<int:id>')
@@ -113,15 +127,15 @@ def deletar(id):
 
 @app.route('/uploads/<nome_arquivo>')
 def imagem(nome_arquivo):
-    if nome_arquivo != 'capa.jpg':
-        u = nome_arquivo.split('$')
+    u = nome_arquivo.split('$')
+    if 'capa.jpg' not in nome_arquivo:
         diretorio = os.path.join(app.config['UPLOAD_PATH'], os.path.dirname(u[0]))
         diretorio = diretorio + '/' + u[0]
         arquivo = os.path.basename(u[1])
 
         if not os.path.exists(os.path.join(diretorio, arquivo)):
-            return abort(404)
+            return send_from_directory('uploads', 'capa.jpg')
 
         return send_from_directory(diretorio, arquivo)
-    return send_from_directory('uploads', nome_arquivo)
+    return send_from_directory('uploads', 'capa.jpg')
 
